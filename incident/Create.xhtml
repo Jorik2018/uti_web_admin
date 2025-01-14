@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-model="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form action="/admin/uti/api/incident" 
+            v-bind:header="(o.id?'#{bundle.Edit}':'#{bundle.Create}')+' #{bundle.Incident}'">
+        <div class="v-form">
+            <label>Fecha y hora del incidente ¿Cuándo ocurrió el ISD?:</label>
+            <v-calendar required="true" type="datetime-local" v-model="o.datetime"/>
+            <label>Lugar físico ¿Dónde ocurrió el ISD?:</label>
+            <v-textarea v-model="o.place" required="true"/>
+            <label>Quiénes ¿Quiénes sufrieron el ISD? Nombre de la persona y puesto/cargo en la organización/ colectivo:</label>
+            <v-textarea v-model="o.affected" />
+            <label>Lugar digital: dispositivos, aplicaciones, web ¿Qué dispositivos, aplicaciones o páginas web fueron afectados por el ISD?</label>
+            <v-textarea v-model="o.tiAffected" />
+            <label>Relato del ISD Relata qué aconteció, deteniéndote en todos los detalles particulares qué recuerdes</label>
+            <v-textarea v-model="o.description" />
+            <label>Evidencias ¿Tenemos evidencias? ¿Donde están almacenadas? * Incluir todas las que se tengan y sean posibles de reunir</label>
+            <v-textarea v-model="o.evidence" />
+            <v-fieldset legend="Analiza el Incidente de Seguridad Digital" class="v-form">
+                <v-fieldset legend="7. Tipo de ISD. Procesos donde se manifiesta el ISD y tipo de manifestación" style="font-weight: bolder;">
+                    <label>Tipo:</label>
+                    <v-select v-model="o.type">
+                        <option value="">--SELECCIONAR--</option>
+                        <option v-for="(value,key) in options.type" v-bind:key="'documentTypeId-'+key" v-bind:value="value">{{value}}</option>
+                    </v-select>
+                    <label>Tipo Manifestación:</label>
+                    <v-select v-model="o.demonstrationType">
+                        <option value="">--SELECCIONAR--</option>
+                        <option v-for="(value,key) in options.demonstrationType" v-bind:key="'demonstrationType-'+key" v-bind:value="value[0]">{{value[1]}}</option>
+                    </v-select>
+                </v-fieldset>
+                <label>Daños ¿El ISD ha generado algún daño personal o a la organización?</label>
+                <v-textarea v-model="o.damage" />
+                <label>Agresor ¿Se sabe quienes están detrás del ISD?</label>
+                <v-textarea v-model="o.aggressor" />
+                <label>Motivaciones ¿Por qué crees que ha pasado?¿Relacionas el ISD  con alguna acción de tu organización?</label>
+                <v-textarea v-model="o.motivation" />
+                <label>Seguimiento ¿Qué acciones fueron tomadas para reaccionar al ISD?</label>
+                <v-textarea v-model="o.tracking" />
+            </v-fieldset>
+        </div>
+        <center>
+            <v-button value="#{bundle.Save}" icon="fa-save" v-on:click.prevent="save"/>
+            <v-button value="#{bundle.Cancel}" icon="fa-ban" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+        //--var axios=window.axios;
+        //--var _=window._;
+        _.ui({
+            props: ['id'],
+            data() {
+                return {
+                    k:0,
+                    options:{
+                        type:[
+                            'COMUNICACIÓN',
+                            'INFORMACIÓN ALMACENADA',
+                            'NAVEGACIÓN',
+                            'HARDWARE'
+                        ],
+                        demonstrationType:[
+                            [1,'Recibimos una notificación de intrusión o intento de a una de nuestras cuentas.'],
+                            [2,'Perdimos acceso a nuestra(s) cuenta(s).'],
+                            [3,'Estamos teniendo problemas de uso o funcionamiento con correo(s) electrónico(s).'],
+                            [4,'Es publicada información personal privada']
+                        ]
+                    },
+                    filter: null, o: {}
+                };
+            },
+            mounted() {
+                this.render();
+            },
+            methods:{
+                upload(e,r){
+                    e.fileName = e.fileName.substr(0, e.fileName.lastIndexOf('.')) || e.fileName;
+                    if(r){
+                        this.o.references.push(e);
+                    }else{
+                        if(!this.o.name)
+                        this.o.name=e.fileName;
+                        this.o.ext=e;
+                    }
+                },
+                render() {
+                    var me = this, id = me.id,user=me.user,perms=user.ext.perms;
+                    if (id)
+                        axios.get('/admin/uti/api/incident/' + id).then((response)=>{
+                            var o=response.data;
+                            me.o = o;
+                        });
+                },
+                input(e){
+                    if(e)this.o.references.push({document:{code:e.code,id:e.id},fileName:e.name});
+                }
+            }
+        });
+    </script>
+    <style>
+        .v-item{
+            border: 1px solid white;
+            padding: 10px;
+        }
+        .v-item:not(:first-child){
+            margin-top: 10px;
+        }
+        .v-dataview > div{
+            padding: 5px;
+            border:1px solid white;
+            cursor:pointer;
+        }
+        .v-dataview > div:hover:not(.v-more-results){
+            background-color:  dodgerblue;
+        }
+        .v-more-results{
+            background-color: black;
+        }
+    </style>
+</html>

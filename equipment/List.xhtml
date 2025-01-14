@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <ui:composition template="/template.xhtml">
+        <ui:param name="NODE_TITLE" value="Equipments" />
+        <ui:define name="body">
+            <style>
+                .color-1{
+                    background-color: greenyellow;
+                }
+                .color-2{
+                    background-color: red;
+                }
+            </style>
+            
+            <c:set value="#{systemController.access('ADMIN_EQUIPMENT')}" var="ADMIN_EQUIPMENT"/>
+            <h:form id="EquipmentList">
+                <p:panel header="#{NODE_TITLE}">
+                    <p:dataTable id="datalist" value="#{equipmentController.dataModel}" var="item"
+                                 selection="#{equipmentController.selectedList}"
+                                 paginator="true"
+                                 rowKey="#{item.id}"
+                                 rows="50"
+                                 rowsPerPageTemplate="50,100,150,200"
+                                 scrollable="true"
+                                 lazy="true"
+                                 >
+
+                        <f:facet name="header">
+                            <p:commandButton id="createButton" rendered="#{ADMIN_EQUIPMENT}" icon="ui-icon-plus" styleClass="on" value="#{bundle.Create}" actionListener="#{viewParam.x(equipmentController.prepareCreate()).include('/soporte-ti/equipment/Create.xhtml').update('EquipmentCreate').set('UPDATE','EquipmentList')}" oncomplete="_.o('EquipmentCreate',args)"/>
+                            <p:commandButton id="editButton" rendered="#{ADMIN_EQUIPMENT}" actionListener="#{viewParam.include('/soporte-ti/equipment/Create.xhtml').update('EquipmentCreate').set('UPDATE','EquipmentList:datalist')}" icon="ui-icon-pencil" value="#{bundle.Edit}" oncomplete="_.o('EquipmentCreate',args)" />
+                            <p:commandButton id="bajaButton" rendered="#{ADMIN_EQUIPMENT}" actionListener="#{viewParam.include('/soporte-ti/equipment/Darbaja.xhtml').update('EquipmentDarbaja').set('UPDATE','EquipmentList:datalist')}"  value="Dar de baja" oncomplete="_.o('EquipmentDarbaja',args)" />
+                        </f:facet>
+                        <p:column selectionMode="multiple"  styleClass="checked-column"/>
+                        
+                        <p:column width="300" filterBy="#{sessionController.pp['lugar']}">
+                            <f:facet name="filter" >
+                                <p:inputText value="#{sessionController.pp['lugar']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Lugar}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.lugar}"/>
+                        </p:column>
+                        <p:column width="10" >
+                            <f:facet name="header">
+                                <h:outputText value="N°"/>
+                            </f:facet>
+                            <h:outputText value="#{item.numero}"/>
+                        </p:column>
+                        <p:column width="100" filterBy="#{sessionController.pp['codigoIp']}">
+                            <f:facet name="filter" >
+                                <p:inputText value="#{sessionController.pp['codigoIp']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Codigo-Ip"/>
+                            </f:facet>
+                            <h:outputText value="#{item.codigoIp}"/>
+                        </p:column>
+
+                        <p:column width="150" filterBy="#{sessionController.pp['people']}">
+                            <f:facet name="filter" >
+                                <p:inputText value="#{sessionController.pp['people']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Personal encargado"/>
+                            </f:facet>
+                            <h:outputText value="#{item.people}"/>
+                        </p:column>
+                        <p:column width="80" filterBy="#{sessionController.pp['equipo']}">
+                            <f:facet name="filter" >
+                                <p:inputText value="#{sessionController.pp['equipo']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Tipo-equipo"/>
+                            </f:facet>
+                            <h:outputText value="#{item.equipo}"/>
+                        </p:column>
+                        <p:column width="200" filterBy="#{sessionController.pp['caracteristicas']}">
+                            <f:facet name="filter" >
+                                <p:inputText value="#{sessionController.pp['caracteristicas']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Caracteristicas"/>
+                            </f:facet>
+                            <h:outputText value="#{item.caracteristicas}"/>
+                        </p:column>
+                        <p:column width="120" filterBy="#{sessionController.pp['macId']}">
+                            <f:facet name="filter" >
+                                <p:inputText value="#{sessionController.pp['macId']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="MAC"/>
+                            </f:facet>
+                            <h:outputText value="#{item.macId}"/>
+                        </p:column>
+                        <p:column width="100" filterBy="#{sessionController.pp['workgroup']}">
+                            <f:facet name="filter" >
+                                <p:inputText value="#{sessionController.pp['workgroup']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Grupo trabajo"/>
+                            </f:facet>
+                            <h:outputText value="#{item.workgroup}"/>
+                        </p:column>
+                        <p:column width="100" filterBy="#{sessionController.pp['name']}">
+                            <f:facet name="filter" >
+                                <p:inputText value="#{sessionController.pp['name']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Nombre equipo"/>
+                            </f:facet>
+                            <h:outputText value="#{item.name}"/>
+                        </p:column>
+                        <p:column width="100" filterBy="#{sessionController.pp['codPatrimonial']}">
+                            <f:facet name="filter" >
+                                <p:inputText value="#{sessionController.pp['codPatrimonial']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.CodPatrimonial}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.codPatrimonial}"/>
+                        </p:column>
+<!--                    2201 final-->
+                        <p:column width="100" class="color-#{item.estado}" filterBy="#{sessionController.pp['estado']}">
+                            <f:facet name="filter" >
+                                <p:inputText   value="#{sessionController.pp['estado']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Estado"/>
+                            </f:facet>
+                            <h:outputText value="#{equipmentController.ObtenerEstadoequipmen(item.estado)}"/>
+                        </p:column>
+                        </p:dataTable>
+                </p:panel>
+            </h:form>
+         </ui:define>
+    </ui:composition>
+</html>

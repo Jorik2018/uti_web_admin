@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <ui:composition template="/template.xhtml">
+        <ui:param name="NODE_TITLE" value="#{bundle.Service}s" />
+        <ui:define name="body">
+            <c:set value="#{systemController.access('ADMIN_DESARROLLO_SOCIAL_DSINDICATOR')}" var="ADMIN_DESARROLLO_SOCIAL_DSINDICATOR"/>
+            <h:form id="DsIndicatorList">
+                <p:panel header="#{NODE_TITLE}">
+                    <p:dataTable id="datalist" value="#{utiServiceController.dataModel}" var="item"
+                                 selection="#{utiServiceController.selectedList}"
+                                 paginator="true"
+                                 rowIndexVar="riv"
+                                 rowKey="#{item.id}"
+                                 rows="50"
+                                 rowsPerPageTemplate="50,100,150,200"
+                                 scrollable="true"
+                                 lazy="true"
+                                 rowStyleClass="#{item.status eq 'Baja'?'red':''}"
+                                 >
+
+                        <f:facet name="header">
+                            <p:commandButton id="createButton" icon="ui-icon-plus" styleClass="on" value="#{bundle.Create}" actionListener="#{viewParam.x(utiServiceController.prepareCreate()).include('/uti/service/Create.xhtml').update('DsIndicatorCreate').set('UPDATE','DsIndicatorList')}" oncomplete="_.o('DsIndicatorCreate',args)"/>
+                            <p:commandButton id="editButton" icon="ui-icon-pencil" value="#{bundle.Edit}" actionListener="#{viewParam.include('/uti/service/Create.xhtml').update('DsIndicatorCreate').set('UPDATE','DsIndicatorList')}" oncomplete="_.o('DsIndicatorCreate',args)" />
+                            <p:commandButton id="deleteButton" class="red" icon="ui-icon-trash"  value="#{bundle.Delete}" actionListener="#{utiServiceController.destroy}" update=":growl,datalist" />
+                            <p:commandButton id="downloadButton" icon="ui-icon-trash"  value="#{bundle.Download}" update="DownloadDlg" oncomplete="_.o('DownloadDlg')" />
+                            <p:commandButton id="refreshButton" icon="ui-icon-refresh" styleClass="on" update="datalist" />
+                        </f:facet>
+                        <p:column selectionMode="multiple"  styleClass="checked-column"/>
+
+                        <p:column class="center" width="28" >
+                            <f:facet name="header">
+                                <h:outputText value="#"/>
+                            </f:facet>
+                            <h:outputText value="#{riv+1}" title="#{item.id}">
+                                <f:convertNumber pattern="000" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column width="300" filterBy="#{sessionController.pp['name']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['name']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Name}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.name}"/>
+                        </p:column>
+                        <p:column width="300" filterBy="#{sessionController.pp['entity']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['entity']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Entity}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.entity}"/>
+                        </p:column>
+                        <p:column width="80" class="center" filterBy="#{sessionController.pp['status']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['status']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Status}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.status}"/>
+                        </p:column>
+                        <p:column width="300" filterBy="#{sessionController.pp['dependency']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['dependency']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Dependency}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.dependency}"/>
+                        </p:column>
+                        <p:column width="300" filterBy="#{sessionController.pp['justify']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['justify']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Justify}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.wsJustify}"/>
+                        </p:column>
+                        <p:column/>
+                    </p:dataTable>
+                </p:panel>
+            </h:form>
+            <p:dialog id="ImportDlg" header="Importar Datos">
+                <h:form id="ImportForm">
+                    <h:panelGroup id="display">
+                        <p:panelGrid columns="2" rendered="#{viewParam.p['files'] != null}">
+                            #{viewParam.p['files']}
+                        </p:panelGrid>
+                        <center>
+                            <p:commandButton icon="ui-icon-disk" actionListener="#{utiServiceController.importData(viewParam.p)}" value="#{bundle.Import}" update="display,:growl" oncomplete="return _.c(this,args)"/>
+                            <p:button icon="ui-icon-cancel" value="#{bundle.Cancel}" onclick="return _.c(this)"/>
+                        </center>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
+            <p:dialog id="DownloadDlg" header="Descargar Reportes">
+                <h:form id="DownloadForm">
+                    <h:panelGroup id="display">
+                        <p:panelGrid columns="1" >
+                            #{utiServiceController.selectedList}
+                        </p:panelGrid>
+                        <center>
+                            <p:commandButton ajax="false" icon="ui-icon-arrowthick-1-s" value="#{bundle.Download}"  onclick="PrimeFaces.monitorDownload(_.mask, _.unmask)">
+                                <p:fileDownload  value="#{utiServiceController.downloadData(utiServiceController.selectedList,viewParam.p)}"/>
+                            </p:commandButton>
+                            <p:button icon="ui-icon-cancel" value="#{bundle.Cancel}" onclick="return _.c(this)"/>
+                        </center>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
+        </ui:define>
+    </ui:composition>
+
+</html>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-model="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form id="UtiAtencionCreateForm" action="/admin/uti/api/ip" 
+            v-bind:header="(o.id?'#{bundle.Edit}':'#{bundle.Create}')+' #{bundle.Attention}'">
+        <div class="v-form">
+            <label>Categoria:</label>
+            <v-textarea v-model="o.category" rows="1"/>
+            <label>Codigo:</label>
+            <input v-model="o.code"/>
+            <v-button value="Scanear" v-on:click="scan"/>
+            <v-fieldset v-if="scanResult" >
+                <template v-for="item in scanResult">
+                <div v-for="(v,k) in item" v-bind:key="k">
+                    {{k}}={{v}}
+                </div>
+                </template>
+            </v-fieldset>
+            <label>Tipo:</label>
+            <v-radio-group v-model="o.type">
+                <v-radio label="WIFI" value="W" />
+                <v-radio label="ETHERNET" value="E" />
+            </v-radio-group>
+            <label>Usuario:</label>
+            <input v-model="o.name"/>
+            <label>Cargo:</label>
+            <input v-model="o.position"/>
+            <label>Antivirus:</label>
+            <v-radio-group v-model="o.antivirus">
+                <v-radio label="SI" value="SI" />
+                <v-radio label="NO" value="NO" />
+            </v-radio-group>
+            <label>Restriction:</label>
+            <v-switch v-model="o.restriction" /> 
+            <v-fieldset legend="Escritorio Remoto" class="v-form">
+                <label>Server:</label>
+                <input v-model="o.remoteServer"/>
+                <label>Codigo:</label>
+                <input v-model="o.remoteCode"/>
+                <label>Contraseña:</label>
+                <div style="position: relative">
+                    <input v-show="showRemotePass" v-model="o.remotePass"/>
+                    <input v-show="!showRemotePass" v-model="o.remotePass" type="password" disabled="disabled"/>
+                    <i style="position: absolute;right:7px;top:6px;cursor:pointer;" v-on:click="showRemotePass=!showRemotePass" 
+                       class="fa" v-bind:key="'i-'+showRemotePass" v-bind:class="showRemotePass?'fa-key':'fa-eye'" 
+                       v-bind:style="{color:showRemotePass?'black':'white'}"></i>
+                </div>
+            </v-fieldset>
+            <v-fieldset legend="Estabilizador" class="v-form">
+                <label>Tiene estabilizador:</label>
+                <v-switch v-model="o.stabilizer"/>
+                <label>Codigo Patrimonial:</label>
+                <input v-model="o.stabilizerCode"/>
+                <label>Descripcion:</label>
+                <v-textarea v-model="o.stabilizerDescription" rows="3" maxlength="245"/>
+            </v-fieldset>
+            <v-fieldset legend="Impresora o Fotocopiadora" class="v-form">
+                <label>Impresora:</label>
+                <v-switch v-model="o.printer"/>
+                <label>Codigo Patrimonial:</label>
+                <input v-model="o.printerCode"/>
+                <label>Modelo:</label>
+                <input v-model="o.printerModel"/>
+                <label>Serie:</label>
+                <input v-model="o.printerSerie"/>
+                <label>Descripcion:</label>
+                <v-textarea v-model="o.printerDescription" rows="3" maxlength="245"/>
+            </v-fieldset>
+            <v-fieldset legend="Equipo" class="v-form">
+                <label>#{bundle.PatrimonialCode}:</label>
+                <input v-model="o.patrimonialCode"/>
+                <label>#{bundle.Name}:</label>
+                <input v-model="o.device"/>
+                <label>Modelo:</label>
+                <input v-model="o.deviceModel" maxlength="100"/>
+                <label>Serie:</label>
+                <input v-model="o.deviceSerie"/>
+                <label>Mac ID:</label>
+                <input v-model="o.macId" maxlength="17"/>
+                <label>Workgroup:</label>
+                <input v-model="o.workgroup"/>
+                
+                <label>#{bundle.Description}:</label>
+                <v-textarea v-model="o.description" roes="1" maxlength="145"/>
+                
+            </v-fieldset>
+            <v-fieldset legend="SIAF" class="v-form">
+                <label>Servidor:</label>
+                <input v-model="o.siaf"/>
+                <label>Usuario:</label>
+                <input v-model="o.userSiaf"/>
+                <label>Clave:</label>
+                <input v-model="o.clave"/>
+            </v-fieldset>
+            <v-fieldset legend="Mantenimiento" class="v-form">
+                <label>Tipo:</label>
+                <v-radio-group v-model="o.maintenanceType">
+                <v-radio label="PREVENTIVO" value="P" />
+                <v-radio label="CORRECTIVO" value="C" />
+                </v-radio-group>
+                <label>Fecha:</label>
+                <v-calendar v-model="o.maintenanceDate"/>
+            </v-fieldset>
+            <label>Habilitado:</label>
+                <v-switch v-model="o.active"/>
+        </div>
+
+        <center>
+            <v-button value="#{bundle.Save}" icon="fa-save" v-on:click.prevent="save"/>
+            <v-button value="#{bundle.Cancel}" icon="fa-ban" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+        //--import 'ol/ol.css';
+        //--var axios=window.axios;
+        //--var _=window._;
+        _.ui({
+            props: ['id'],
+            data() {
+                return {scanResult:null,filter: null,showRemotePass:false ,o: {ext: {server: null, client: null, dependency: null}, dependencyId: null}}
+            },
+            computed: {
+                user() {
+                    return window.app ? window.app.session : user;
+                },
+                canAttend() {
+                    var user = this.user;
+                    return user.ext.perms.ATTEND_UTI_ATTENTION || user.uid == 1
+                },
+
+            },
+            methods: {
+                //--close(r){if(r===true){this.$router.back();}},
+                inputClient(v) {
+                    var o = this.o;
+                    o.clientId = v ? v.peopleId : null;
+                    if (v) {
+                        o.dependencyId = v.dependencyId;
+                        o.ext.dependency = v.dependency;
+                    }
+                },
+                dependencyInput(v) {
+                    this.o.dependencyId = v ? v.id : null;
+                },
+                process(o) {
+                    var user = this.user;
+                    if (o.peopleId == '0')
+                        o.peopleId = null;
+                    if (!o.user)
+                        o.user = user.idDir;
+                    return o;
+                },
+                scan(){
+                    var me = this, code = me.o.code;
+                    if (code)
+                        axios.get('/api/ipscan/?q='+code).then((r) => {
+                            me.scanResult=r.data;
+                        });
+                },
+                render() {
+                    var me = this, id = me.id, user = me.user, perms = user.ext.perms;
+                    if (id)
+                        axios.get('/admin/uti/api/ip/' + id).then((r) => {
+                            me.o = r.data;
+                        });
+                }
+            },
+            mounted() {
+                this.render();
+            }
+        })
+    </script>
+</html>

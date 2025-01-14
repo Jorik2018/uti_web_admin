@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form id="UtiAtencionList" header="#{NODE_TITLE}" action="/admin/uti/attention">
+        <v-table
+            v-bind:selectable="true"
+            v-bind:scrollable="true"
+            rowKey="id"
+            v-bind:pagination="50"
+            row-style-class="row.endDate?'':'yellow'"
+            src="/admin/uti/api/attention" >
+                <template v-slot:header="">
+                    <v-button value="#{bundle.Create}" icon="fa-plus" class="on" v-on:click.prevent="create"/>
+                    <v-button value="#{bundle.Edit}" icon="fa-pen" v-on:click.prevent="edit" v-bind:disabled="rowSelectedCount==0||!canEdit(getSelected())"/>
+                    <v-button value="#{'Finalizar'}" v-if="canFinalizar()" icon="fa-check" v-on:click.prevent="complete(getSelected())" v-bind:disabled="rowSelectedCount==0"/>
+                    <v-button value="#{'Confirmar'}" icon="fa-thumbs-up"  v-on:click.prevent="valorizar(getSelected())" v-bind:disabled="rowSelectedCount==0||!canValorizar(getSelected())"/>
+                    <v-button value="#{bundle.Delete}" icon="fa-trash" v-on:click.prevent="destroy" v-bind:disabled="rowSelectedCount==0||!canDelete(getSelected())"/>
+                    <v-button title="#{bundle.Refresh}" icon="fa-sync" v-on:click.prevent="refresh"/>
+                </template>
+                <template v-slot:default="{row,index}">
+                    <td class="center" label="#" width="28" >
+                        {{pad(index+1,3)}}
+                    </td>
+                    <td width="80" class="center" v-bind:class="{'yellow':0>row.id}" label="#{bundle.Code}">
+                        <v-filter>
+                            <input v-model="filters.id"/>
+                        </v-filter>
+                           {{row.id>0?pad(row.id,6):'-'}}
+                    </td>
+                    <td width="80" class="center" label="#{bundle.Type}">
+                       <v-filter>
+                           <input v-model="filters.typeId"/>
+                       </v-filter>
+                       {{row.typeId==2?'SOFTWARE':row.typeId==3?'MIXTO':'HARDWARE'}}
+                    </td>
+                    <td width="220" label="#{'Problematica'}">
+                       <v-filter>
+                           <input v-model="filters.description"/>
+                       </v-filter>
+                       {{row.description}}
+                    </td>
+                    <td width="220" label="#{bundle.Solution}">
+                       <v-filter>
+                           <input v-model="filters.solution"/>
+                       </v-filter>
+                       {{row.solution}}
+                    </td>
+                    <td width="220" label="#{'Atendido por'}">
+                       <v-filter>
+                           <input v-model="filters.server"/>
+                       </v-filter>
+                       {{row.ext.server?row.ext.server:row.peopleId}}
+                    </td>
+                    <td width="300" label="#{bundle.Dependency}">
+                       <v-filter>
+                           <input v-model="filters.dependency"/>
+                       </v-filter>
+                       {{row.ext.dependency}}
+                    </td>
+                    <td width="80" class="center" label="#{bundle.StartDate}">
+                       <v-filter>
+                           <input v-model="filters.startDate"/>
+                       </v-filter>
+                       {{row.startDate|date}}
+                    </td>
+                    <td width="80" class="center" label="#{bundle.EndDate}">
+                       <v-filter>
+                           <input v-model="filters.endDate"/>
+                       </v-filter>
+                       {{row.endDate|date}}
+                    </td>
+                    <td width="220" label="#{bundle.Client}">
+                       <v-filter>
+                           <input v-model="filters.client"/>
+                       </v-filter>
+                       {{row.ext.client}}
+                    </td>
+                    <td width="220" class="center" label="#{bundle.ConfirmedBy}">
+                       <v-filter>
+                           <input v-model="filters.confirmedBy"/>
+                       </v-filter>
+                       {{row.ext.confirmedBy?row.ext.confirmedBy:row.confirmedBy}}
+                    </td>
+            </template>
+        </v-table>
+    </v-form>
+    <script>
+    //--import 'ol/ol.css';
+    //--import Vue from 'vue'
+    //--var axios=window.axios;
+    //--var MsgBox=window._.MsgBox;
+        _.ui({
+            //--mounted(){window.app.title=this.$children[0].header;},
+            methods:{
+                pad(v,n){return Vue.pad(v,n)},
+                canValorizar(o){
+                    var user=this.user;o=o[0];
+                    return o?(user.idDir==o.clientId&amp;&amp;o.endDate):0;
+                },
+                canFinalizar(){
+                    var user=this.user;
+                    return user.uid==1||user.ext.perms.ATTEND_UTI_ATTENTION;
+                },
+                canDelete(o){
+                    var user=this.user;o=o[0];
+                    return user.uid==1||user.ext.perms.ADMIN_UTI||user.idDir==o.user;
+                },
+                canEdit(o){
+                    var user=this.user;o=o[0];
+                    return user.uid==1||user.ext.perms.ATTEND_UTI_ATTENTION||user.idDir==o.user;
+                },
+                own(o){
+                    var user=this.user;o=o[0];
+                    return user.idDir==o.clientId;
+                },
+                valorizar(){
+                    var me=this;
+                    MsgBox('¿Desea confirmar el cumplimiento del servicio recibido?', function (r) {
+                        if (r==0) {
+                            axios.post("/admin/uti/api/attention/" + me.user.idDir + "/confirm")
+                                    .then(function () {
+                                        me.refresh();
+                                    });
+                        }
+                    }, ['SI','CANCELAR']);
+                },
+                complete(o){
+                    var me=this;
+                    MsgBox('¿Esta seguro de confirmar el cumplimiento del servicio de soporte?', function (r) {
+                        if (r == 0) {
+                            axios.post("/admin/uti/api/attention/" + o[0].id + "/finish")
+                                    .then(function () {
+                                        me.refresh();
+                                    });
+                        }
+                    }, ['SI', 'NO']);
+                }
+            },
+            created(){
+                var me=this,user=me.user;
+                me.perms.ADMIN_UTI_ATTENTION=#{systemController.access('ADMIN_UTI_ATTENTION')};
+                if(!(user.uid==1||user.ext.perms.ADMIN_UTI)){
+                    me.filters.user=user.ext.people.id;
+                    if(user.ext.perms.ATTEND_UTI_ATTENTION){
+                        me.filters.empty=true;
+                    }
+                }
+            },
+            computed:{
+                user(){
+                    return window.app?window.app.session:user;
+                }
+            },
+            data(){return{};}
+        });
+    </script>
+</html>

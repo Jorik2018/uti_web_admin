@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form header="#{NODE_TITLE}" action="/admin/uti/document">
+        <v-table 
+            v-bind:selectable="true"
+            v-bind:scrollable="true"
+            v-bind:pagination="50"
+            src="/admin/uti/api/document" 
+            >
+            <template v-slot:header="">
+                <v-button value="#{bundle.Create}" v-if="canRegister()" icon="fa-plus" class="on" v-on:click.prevent="create"/>
+                <v-button value="#{bundle.View}" icon="fa-eye" v-on:click.prevent="open('/admin/uti/document/' + getSelected()[0].id)" v-bind:disabled="!rowSelectedCount"/>
+                <v-button value="#{bundle.Edit}" v-if="canRegister()" icon="fa-pen" v-on:click.prevent="edit" v-bind:disabled="!rowSelectedCount"/>
+                <v-button value="#{bundle.Delete}" v-if="canDelete()" icon="fa-trash" v-on:click.prevent="destroy" v-bind:disabled="!rowSelectedCount"/>
+                <v-button title="#{bundle.Refresh}" icon="fa-sync" v-on:click.prevent="refresh"/>
+            </template>
+            <template v-slot:default="{row,index}">
+                <td class="center" header="#" v-bind:title="row.id" width="28" >
+                    <v-filter>
+                        <input disabled="disabled"/>
+                    </v-filter>
+                    {{pad(index+1,3)}}
+                </td>
+                <td width="60" class="center" header="Año">
+                    <v-filter>
+                        <input v-model="filters.year"/>
+                    </v-filter>
+                    {{row.year}}
+                </td>
+                <td width="50" class="center" header="Tipo">
+                    <v-filter>
+                        <v-select multiple="true" v-model="filters.documentTypeId">
+                            <v-options v-bind:data="type" value-field="0" display-field="1"/>
+                        </v-select>
+                    </v-filter>
+                    {{row.documentTypeId}}
+                </td>
+                <td width="300" v-bind:title="'DEP='+row.dependencyId" header="Nombre">
+                    <v-filter>
+                        <input v-model="filters.name"/>
+                    </v-filter>
+                    {{row.name}}
+                    <div class="bold">{{row.category}}</div>
+                </td>
+                <td width="400" v-html="row.description" header="Descripcion">
+                    <v-filter>
+                        <input v-model="filters.description"/>
+                    </v-filter>
+                    {{row.description}}
+                </td>
+                <td width="120" class="center" header="Clave">
+                    <v-filter>
+                        <input v-model="filters.clave"/>
+                    </v-filter>
+                    <a v-on:click="clipboard(row)">
+                        {{row.id}}.{{row.code}} <i class="fa fa-clipboard"></i>
+                    </a>
+                </td>
+                <td width="80" class="center" label="#{bundle.CreatedDate}">
+                    <v-filter>
+                        <input v-model="filters.createdDate" disabled="disabled"/>
+                    </v-filter>
+                    {{row.createdDate|date}}
+                 </td>
+                <td width="60" class="center" header="Descargar">
+                    <v-filter>
+                        <input disabled="disabled"/>
+                    </v-filter>
+                    <a target="document" v-if="row.extension" v-bind:href="'/admin/uti/api/document/download/'+row.id+'.'+row.code">
+                        <i class="fa fa-download"></i>
+                    </a>
+                </td>
+                <td width="40" class="center" header="Ver">
+                    <v-filter>
+                        <input disabled="disabled"/>
+                    </v-filter>
+                    <a target="document" v-if="row.extension=='pdf'" v-on:click="pdf(row)">
+                        <i class="fa fa-eye"></i>
+                    </a>
+                </td>
+                <td width="90" class="center" header="#{bundle.UpdatedDate}">
+                    <v-filter>
+                        <input v-model="filters.updatedDate" disabled="disabled"/>
+                    </v-filter>
+                    {{row.updatedDate|date}}
+                 </td>
+                <td width="80" class="center" v-bind:class="!row.status||row.status=='O'?'yellow':''" header="#{bundle.Status}">
+                    <v-filter>
+                        <input v-model="filters.status" disabled="disabled"/>
+                    </v-filter>
+                    {{row.status}}
+                 </td>
+            </template>
+        </v-table>
+    </v-form>
+        <script>
+        //--import 'ol/ol.css';
+        //--import Vue from 'vue'
+        //--var axios=window.axios;
+        //--var MsgBox=window._.MsgBox;
+        _.ui({
+            data(){
+                return {type:[
+                    ['dabi','DATOS ABIERTOS'],     
+                    ['memo','MEMO'], 
+                    ['memu','MEMO MULTIPLE'],
+                    ['inf','INFORME'],
+                    ['ioi','INFORME DE ORGANO INSTRUCTOR'],
+                    ['o','OFICIO'],
+                    ['omul','OFICIO MULTIPLE'],
+                    ['ar','ADENDAS REGIONALES'],
+                    ['acr','ACUERDO CONSEJO REGIONAL'],
+                    ['ca','CARTA'],
+                    ['dr','DECRETO REGIONAL'],
+                    ['cnv','CONVENIOS'],
+                    ['or','ORDENANZA REGIONAL'],
+                    ['rdr','RESOLUCIÓN DIRECTORAL REGIONAL'],
+                    ['rer','RESOLUCIÓN EJECUTIVA REGIONAL'],
+                    ['rgr','RESOLUCIÓN GERENCIAL GENERAL REGIONAL'],
+                    ['rm','RESOLUCIÓN MINISTERIAL']
+                ]};
+            },
+            methods:{
+                
+                canDelete(o){
+                    var me = this, user = me.user, perms = me.perms;
+                    if(o){
+                        return user.uid == 1||perms.UTI_DOCUMENT_REGISTER;                        
+                    }else
+                        return user.uid == 1||perms.UTI_DOCUMENT_REGISTER;   
+                },
+                canRegister(o){
+                    var me = this, user = me.user, perms = me.perms;
+                    if(o){
+                        return user.uid == 1||perms.UTI_DOCUMENT_REGISTER||perms.UTI_DOCUMENT_REGISTER &amp;&amp;o.user == user.id;                        
+                    }else
+                        return user.uid == 1||perms.UTI_DOCUMENT_REGISTER||perms.UTI_DOCUMENT_REGISTER;
+                },
+                clipboard(o){
+                    if(o.code){
+                        var textToCopy=o.id+'.'+o.code;
+                        if (navigator.clipboard &amp;&amp; window.isSecureContext) {
+                            if(navigator.clipboard.writeText(textToCopy))
+                                MsgBox('El codigo fue copiado al portapapeles!',{callback(){}});
+                        } else {
+                            let textArea = document.createElement("textarea");
+                            textArea.value = textToCopy;
+                            textArea.style.position = "fixed";
+                            textArea.style.left = "-999999px";
+                            textArea.style.top = "-999999px";
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            new Promise((res, rej) => {
+                                document.execCommand('copy') ? res() : rej();
+                                textArea.remove();
+                                MsgBox('El codigo fue copiado al portapapeles!',{callback(){}});
+                            });
+                        }
+                        
+                    }
+                },
+                pdf(o){
+                    var href='/cdn/web/viewer.html?v=12&amp;file=/admin/uti/api/document/download/'+o.id+'.'+o.code;
+                    var m=_.mask();
+                    var iframe=document.createElement('iframe');
+                    iframe.style.cssText ='border-radius:20px;backround-color:red;padding:10px;height:-webkit-fill-available;width:-webkit-fill-available !important;border:0 none';
+                    iframe.frameborder=0;
+                    iframe.src=href;
+                    //iframe.src='http://docs.google.com/gview?url='+window.location.hostname+href+'&amp;embedded=true';
+                    
+                    var f=document.createElement('div');
+                    f.appendChild(iframe);
+                    f.style.cssText='position:absolute;left:40px;top:'+(parseInt(m.style.top)+40)+'px;z-index:10000;width:calc(100% - 80px);height:500px;border-radius:20px;background-color:white';
+
+
+
+                    document.body.appendChild(f);
+                    document.body.style.overflow = 'hidden';
+                    f.style.height='calc(100% - 80px)';
+                    m.onclick=function(){
+                        f.style.display='none';
+                        _.unmask(m);
+                        document.body.style.overflow = 'auto';
+                    };
+                    return false;
+                }
+            }
+        });
+    </script>
+</html>

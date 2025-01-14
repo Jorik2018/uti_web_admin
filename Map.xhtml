@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <link rel="stylesheet" href="/cdn/all.min.css"/>
+    <script src="/cdn/vue.js"></script>
+    <script src="/cdn/axios.min.js"></script>
+    <script src="/cdn/vue-ui.js"></script>
+    <v-map id="map" style="height:100%" v-on:addLayer="addLayer">
+        <v-layer v-bind:layer-function="layerFunction"></v-layer>
+        <v-layer v-bind:layer-function="layerFunction2"></v-layer>
+        <v-layer v-bind:layer-function="layerFunction3"></v-layer>
+        <v-layer v-bind:layer-function="layerFunction4"></v-layer>
+        <v-layer v-bind:layer-function="layerFunction5"></v-layer>
+        <v-map-control style="top:10px;right:10px">
+            <v-radio-group v-model="currentLayer" v-on:input="layerInput">
+                <v-radio v-for="(l,i) in layers" v-bind:label="l.values_.name?l.values_.name:('LAYER-'+i)" v-bind:value="''+i"/>
+            </v-radio-group>
+        </v-map-control>
+    </v-map>
+        <script>
+        //--import VProjectLayerControl from '@/assets/v-project-layer-control.vue'
+        //--import 'ol/ol.css';
+        //--import Feature from 'ol/Feature'
+        //--var ol=window.ol;
+        //--ol.Feature=Feature;
+        //--var _=window._;
+        _.ui({          
+            /*!*/el: '#map',
+            data(){return {layers:[],currentLayer:null}},
+            methods:{
+                layerInput(i){
+                    for(var j=0;this.layers.length>j;j++){
+                        this.layers[j].setVisible(false);
+                    }
+                    this.layers[i].setVisible(true);
+                },
+                addLayer(l){
+                    console.log(l);
+                    l.setVisible(false);
+                    this.layers.push(l);
+                },
+                layerFunction(){
+                    return new ol.layer.Tile({
+                        source: new ol.source.TileWMS({
+                        url: 'https://ahocevar.com/geoserver/wms',
+                        params: {'LAYERS': 'topp:states', 'TILED': true},
+                        serverType: 'geoserver',visible: false,
+                        // Countries have transparency, so do not fade tiles:
+                        transition: 0,
+                        }),name:'EEUU STATES'
+                    })
+                },
+                layerFunction2(){
+                    return new ol.layer.Tile({
+                        source: new ol.source.TileWMS({
+                        url: 'http://172.16.0.4:8088/geoserver/wms',
+                        params: {'LAYERS': 'GRA_ACONDICIONAMIENTO_TERRITORIAL', 'TILED': true},
+                        serverType: 'geoserver',visible: false,
+                        // Countries have transparency, so do not fade tiles:
+                        transition: 0,
+                        }),name:'ACONDICIONAMIENTO TERRITORIAL'
+                    })
+                },
+                layerFunction3(){
+                    return new ol.layer.Tile({
+                        source: new ol.source.XYZ({
+                            attributions:'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/' +
+                            'rest/services/World_Topo_Map/MapServer">ArcGIS</a>',visible: false,
+                            url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+                        }),name:'TOPOGRAFICO'
+                    });
+                },
+                layerFunction4(){
+                    return new ol.layer.Tile({
+                        source: new ol.source.XYZ({
+                            attributions:'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/' +
+                            'rest/services/ESRI_Imagery_World_2D/MapServer">ArcGIS</a>',visible: false,
+                            url:'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                        }),name:'SATELITAL'
+                    });
+                },
+                layerFunction5(){
+                    return new ol.layer.Vector({
+  source: new ol.source.Vector({
+    format: new ol.format.GeoJSON(),
+    url: function(extent) {
+      return  'http://172.16.0.4:8088/geoserver/gisAncash/ows?service=WFS&amp;version=1.0.0&amp;'+
+              'request=GetFeature&amp;typeName=gisAncash%3AGRA_ACONDICIONAMIENTO_TERRITORIAL&amp;'+
+              'maxFeatures=50&amp;outputFormat=application%2Fjson';
+    }
+  })
+});
+                }
+                
+                
+            }
+            //--extends:window._.extends,
+            //--components:{VProjectLayerControl}
+        });
+        </script>
+</html>

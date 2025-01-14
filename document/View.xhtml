@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-model="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form action="/admin/uti/api/document" 
+            v-bind:header="o.name">
+        <div class="v-form">
+            <label>#{bundle.Dependency}:</label>
+            <div>{{o.dependency?o.dependency.fullName:''}}</div>
+            <label>#{bundle.Year}:</label>
+            <div>{{o.year}}</div>
+            <label>#{bundle.Type}:</label>
+            <div>{{o.documentTypeName}}</div>
+            <template v-if="o.category">
+                <label>#{bundle.Category}:</label>
+                <div>{{o.category}}</div>
+            </template>
+            <label>#{bundle.Description}:</label>
+            <div>{{o.description}}</div>
+            
+            <template v-if="o.extension">
+            <iframe v-if="o.extension=='pdf'" width="100%" height="300px" style="backround-color: red; padding: 5px 0px 0px; height: 300px; width: 100% !important; border: 0 none;" 
+                   
+                    v-bind:src="url"
+                    v-bind:src2="'/cdn/web/viewer.html?file='+'/admin/uti/api/document/download/'+o.id+'.'+o.code"></iframe>
+            <div class="right" style="margin-top: 10px;">
+       
+                <a v-if="o.id||o.ext.tempFile" style="display: block;color: yellow;" 
+                   target="document" v-bind:href="
+                   o.ext.tempFile?
+                       ('/fs/temp/'+o.ext.tempFile):
+                       ('/admin/uti/api/document/download/'+o.id+'.'+o.code)">Descargar <i class="fa fa-download"></i></a>
+            </div>
+            </template>
+            <v-fieldset v-if="o.references.length" legend="Referencias" v-bind:key="k" class="v-form">
+                <template v-for="item in o.references">
+                    <div v-if="!item.canceled" class="v-item" >
+                        <template v-if="!item.document.extension">
+                            {{item.fileName}}
+                        </template>
+                        <a v-if="item.document.extension" style="display: block;color: yellow;"
+                            target="document" v-bind:href="
+                            item.tempFile?
+                            ('/fs/temp/'+item.tempFile):
+                            ('/admin/uti/api/document/download/'+item.document.id+'.'+item.document.code)
+                            ">{{item.fileName}}</a>
+                    </div>   
+                </template> 
+            </v-fieldset>
+        </div>
+        <center>
+            <v-button value="#{bundle.Close}" icon="fa-ban" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+        //--var axios=window.axios;
+        //--var _=window._;
+        _.ui({
+            props: ['id'],
+            data() {
+                return {
+                    k:0,
+                    filter: null, o: {dependency:null,documentTypeId:'o',year:new Date().getFullYear(),ext:{},references:[]}};
+            },
+            computed:{
+                url(){
+                    var o=this.o;
+                    return '/cdn/web/viewer.html?v=1&amp;file=/admin/uti/api/document/download/'+o.id+'.'+o.code;
+                    //return 'http://docs.google.com/gview?url='+window.location.hostname+'/admin/uti/api/document/download/'+o.id+'.'+o.code+'&amp;embedded=true';
+                }
+            },
+            mounted() {
+                this.render();
+            },
+            methods:{
+                upload(e,r){
+                    e.fileName = e.fileName.substr(0, e.fileName.lastIndexOf('.')) || e.fileName;
+                    if(r){
+                        this.o.references.push(e);
+                    }else{
+                        if(!this.o.name)
+                        this.o.name=e.fileName;
+                        this.o.ext=e;
+                    }
+                },
+                render() {
+                    var me = this, id = me.id,user=me.user,perms=user.ext.perms;
+                    console.log(user);
+                    if (id)
+                        axios.get('/admin/uti/api/document/' + id).then((response)=>{
+                            var o=response.data;
+                            o.references.forEach((e)=>{
+                                e.fileName=e.document.name;
+                                e.documentTypeId=e.document.documentTypeId;
+                                e.year=e.document.year;
+                            });
+                            me.o = o;
+                        });
+                    else
+                        axios.get('/admin/rh/api/contract/0/0',{params:{peopleId:user.idDir,active:1}}).then((r)=>{
+                            me.o.dependency=r.data.data[0].dependency;
+                            var data=[];
+                            r.data.data.forEach((e)=>{
+                                data.push(e.dependency);
+                            });
+                            me.$refs.dependencyAutocomplete.data0=data;
+                        });
+                },
+                input(e){
+                    if(e)this.o.references.push({document:{code:e.code,id:e.id},fileName:e.name});
+                }
+            }
+        });
+    </script>
+    <style>
+        input:read-only:not(:disabled), textarea:read-only:not(:disabled) {
+            border: 1px solid white !important;
+        }
+        .v-item{
+            border: 1px solid white;
+            padding: 10px;
+        }
+        .v-item:not(:first-child){
+            margin-top: 10px;
+        }
+        .v-dataview > div{
+            padding: 5px;
+            border:1px solid white;
+            cursor:pointer;
+        }
+        .v-dataview > div:hover:not(.v-more-results){
+            background-color:  dodgerblue;
+        }
+        .v-more-results{
+            background-color: black;
+        }
+    </style>
+</html>

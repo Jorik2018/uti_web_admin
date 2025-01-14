@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form header="#{NODE_TITLE}" action="/admin/uti/ip">
+        <v-table
+            v-bind:selectable="true"
+            v-bind:scrollable="true"
+            row-style-class="row.active?'green':'red'"
+            
+            rowKey="id"
+            v-on:dblclick="dblclick"
+            v-bind:pagination="50"
+            src="/admin/uti/api/ip" >
+            <template v-slot:header="">
+                <v-button value="ON / OFF" icon="fa-toggle-off" v-on:click.prevent="disable" v-bind:disabled="!rowSelectedCount"/>
+                <v-button value="#{bundle.Create}" icon="fa-plus" class="on" v-on:click.prevent="create"/>
+                <v-button value="#{bundle.Edit}" icon="fa-pen" v-on:click.prevent="edit2" 
+                          v-bind:disabled="!rowSelectedCount||!getSelected()[0].active"/>
+                <v-button value="#{bundle.Delete}" icon="fa-trash" v-on:click.prevent="destroy" v-bind:disabled="!rowSelectedCount"/>
+                <input style="width: 100px" v-model="filters.filter"/>
+                <v-button value="Limpiar" icon="fa-trash" v-on:click.prevent="limpiar" v-bind:disabled="!rowSelectedCount"/>
+                <v-button title="#{bundle.Refresh}" icon="fa-sync" v-on:click.prevent="refresh"/>
+                <v-button icon="fa-book" v-on:click.prevent="open($refs.report)" value="Descargar Reporte"/>
+                <v-button icon="fa-star" v-on:click.prevent="open($refs.scanner)" value="Scanner IP"/>
+                
+            </template>
+            <template v-slot:default="{row,index}">
+                <td class="center" header="#" width="28" >
+                    {{pad(index+1,3)}}
+                </td>
+                <td width="220" sort="category" class="center" header="#{bundle.Category}">
+                    <v-filter>
+                        <v-select multiple="true" v-model="filters.category">
+                            <v-options url="/admin/uti/api/ip/category" value-field="id">
+                                <template v-slot="{item}">
+                                    {{item.id}}
+                                </template>
+                            </v-options>
+                        </v-select>
+                    </v-filter>
+                    {{row.category}}
+                </td>
+                <td width="100"  sort="code" header="#{'Code'}" class="center" remote="true">
+                    <v-filter>
+                        <input v-model="filters.code"/>
+                    </v-filter>
+                   
+                    {{row.code}}
+                 
+                </td>
+                <td width="220" sort="name" header="#{bundle.Name}">
+                    <v-filter>
+                        <input v-model="filters.name"/>
+                    </v-filter>
+                    {{row.name}}
+                </td>
+                <td width="220" sort="position" header="#{bundle.Position}">
+                    <v-filter>
+                        <input v-model="filters.position"/>
+                    </v-filter>
+                    {{row.position}}
+                </td>
+                <td width="220" sort="antivirus" header="#{bundle.Antivirus}">
+                    <v-filter>
+                        <input v-model="filters.antivirus"/>
+                    </v-filter>
+                    {{row.antivirus}}
+                </td>
+                <td width="220" sort="description" header="#{bundle.Description}">
+                    <v-filter>
+                        <input v-model="filters.description"/>
+                    </v-filter>
+                    {{row.description}}
+                </td>
+                <td width="220" header="#{bundle.Restriction}">
+                    <v-filter>
+                        <input v-model="filters.restriction"/>
+                    </v-filter>
+                    {{row.restriction}}
+                </td>
+                <td width="120" sort="macId" header="#{bundle.MacID}" class="center">
+                    <v-filter>
+                        <input v-model="filters.macId"/>
+                    </v-filter>
+                    {{row.macId}}
+                </td>
+                <td width="80" sort="remoteCode" header="Codigo Remoto" class="center">
+                    <v-filter>
+                        <input v-model="filters.remoteCode"/>
+                    </v-filter>
+                    {{row.remoteCode}}
+                </td>
+                <td width="120" header="#{bundle.Workgroup}" class="center">
+                    <v-filter>
+                        <input v-model="filters.workgroup"/>
+                    </v-filter>
+                    {{row.workgroup}}
+                </td>
+                <td width="120" sort="device" header="Codigo Patrimonial Estabilizador" class="center">
+                    <v-filter>
+                        <input disabled="disabled" v-model="filters.stabilizerCode"/>
+                    </v-filter>
+                    {{row.stabilizerCode}}
+                </td>
+                <td width="100" header="#{bundle.StabilizerDescription}" class="center">
+                    <v-filter>
+                        <input disabled="disabled" v-model="filters.stabilizerDescription"/>
+                    </v-filter>
+                    {{row.stabilizerDescription}}
+                </td>
+                <td width="120" sort="device" header="Codigo Patrimonial Impresora" class="center">
+                    <v-filter>
+                        <input disabled="disabled" v-model="filters.printerCode"/>
+                    </v-filter>
+                    {{row.printerCode}}
+                </td>
+                <td width="100" header="#{bundle.PrinterModel}" class="center">
+                    <v-filter>
+                        <input disabled="disabled" v-model="filters.printerModel"/>
+                    </v-filter>
+                    {{row.printerModel}}
+                </td>
+                <td width="120" sort="device" header="#{bundle.PrinterSerie}" class="center">
+                    <v-filter>
+                        <input disabled="disabled" v-model="filters.printerSerie"/>
+                    </v-filter>
+                    {{row.printerSerie}}
+                </td>
+                <td width="100" header="#{bundle.PrinterDescription}" class="center">
+                    <v-filter>
+                        <input disabled="disabled" v-model="filters.printerDescription"/>
+                    </v-filter>
+                    {{row.printerDescription}}
+                </td>
+                <td width="100" header="#{bundle.Device}" class="center">
+                    <v-filter>
+                        <input v-model="filters.device"/>
+                    </v-filter>
+                    {{row.device}}
+                </td>
+                <td width="120" header="#{bundle.SIAF}" class="center">
+                    <v-filter>
+                        <input v-model="filters.siaf"/>
+                    </v-filter>
+                    {{row.siaf}}
+                </td>
+                <td width="120" header="Usuario #{bundle.SIAF}" class="center">
+                    <v-filter>
+                        <input v-model="filters.userSiaf"/>
+                    </v-filter>
+                    {{row.userSiaf}}
+                </td>
+                <td width="220" header="#{bundle.PatrimonialCode}">
+                    <v-filter>
+                        <input v-model="filters.patrimonialCode"/>
+                    </v-filter>
+                    {{row.patrimonialCode}}
+                </td>
+                <td width="80" class="center" sort="updated" remote="true" header="Tipo Mantenimiento">
+                    <v-filter name="filter" >
+                        <input disabled="true"/>
+                    </v-filter>
+                    {{row.maintenanceType}}
+                </td>
+                <td width="80" class="center" sort="updated" remote="true" header="Fecha Mantenimiento">
+                    <v-filter name="filter" >
+                        <input disabled="true"/>
+                    </v-filter>
+                    {{row.maintenanceDate|date}}
+                </td>
+                <td width="80" class="center" header="Usuario">
+                    <v-filter name="filter" >
+                        <input v-model="filters.user" disabled="true"/>
+                    </v-filter>
+                    {{row.user}}
+                </td>
+                <td width="70" class="center" header="Fecha Creación" >
+                    <v-filter name="filter" >
+                        <input v-model="filters.creation" disabled="true"/>
+                    </v-filter>
+                    {{row.creation|date}}
+                </td>
+                <td width="80" class="center" sort="updated" remote="true" header="Fecha Actualización">
+                    <v-filter name="filter" >
+                        <input v-model="filters.updated" disabled="true"/>
+                    </v-filter>
+                    {{row.updated|date}}
+                </td>
+            </template>
+        </v-table>
+        <v-panel ref="report" header="Descargar Reporte">
+            <div class="v-form v-panel">
+                <center>
+                    <v-button icon="fa-download" value="#{bundle.Download}" v-on:click.prevent="download"/>
+                    <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+                </center>
+            </div>
+        </v-panel>
+        <v-panel ref="scanner" header="Scanner IP">
+            <v-table
+            v-bind:selectable="true"
+            v-bind:scrollable="true"
+            v-bind:data="scanResult">
+            <template v-slot:header="">
+                <input v-model="queryIP" style="width: calc(100% - 140px)" />
+                <v-button value="Escanear" icon="fa-sync" 
+                          class="on" v-on:click.prevent="scan"/>
+                
+            </template>
+            <template v-slot:default="{row,index}">
+                <td class="center" header="#" width="28" >
+                    {{pad(index+1,3)}}
+                </td>
+                <td width="100" sort="code" header="#{'Code'}" class="center" remote="true">
+                    <v-filter>
+                        <input v-model="filters.code"/>
+                    </v-filter>
+                    {{row.code}}
+                </td>
+                <td width="220" sort="name" header="#{bundle.Name}">
+                    <v-filter>
+                        <input v-model="filters.name"/>
+                    </v-filter>
+                    {{row.name}}
+                </td>
+            </template>
+        </v-table>
+        </v-panel>
+    </v-form>
+    <script>
+        //--import 'ol/ol.css';
+        //--import Vue from 'vue'
+        //--var axios=window.axios;
+        //--var MsgBox=window._.MsgBox;
+        _.ui({
+            data() {
+                return{queryIP:null,scanResult:[],ips:[{},{}]};
+            },
+            methods: {
+                disable(){
+                    var me=this;
+                    axios.post('/admin/uti/api/ip/disable',this.getSelected().map(e=>e.id))
+                            .then((e)=>{
+                                me.refresh();
+                            });
+                },
+                limpiar(){
+                    var me=this;
+                    axios.put('/admin/uti/api/ip/limpiar/' + this.getSelected().map(e=>e.id))
+                            .then((e)=>{
+                                me.refresh();
+                            });
+                },
+                scan(){
+                    var me = this, q = me.queryIP;
+                    axios.get('/api/ipscan/'+(q?('?q='+q):'')).then((r) => {
+                        me.scanResult=r.data;
+                        localStorage.setItem("scanResult", JSON.stringify(me.scanResult));
+                    });
+                },
+                pad(v, n) {
+                    return Vue.pad(v, n);
+                },
+                edit2(e){
+                    if(this.getSelected()[0].active)this.edit(e);
+                },
+                dblclick(e){
+                    this.edit2({target:{__vue__:{$parent:e.target}}});
+                }
+            },
+            created() {
+                var me = this, user = me.user;
+                me.perms.ADMIN_UTI_ATTENTION =#{systemController.access('ADMIN_UTI_ATTENTION')};
+                if (!(user.uid == 1 || user.ext.perms.ADMIN_UTI)) {
+                    me.filters.user = user.ext.people.id;
+                    if (user.ext.perms.ATTEND_UTI_ATTENTION) {
+                        me.filters.empty = true;
+                    }
+                    try{
+                        me.scanResult=JSON.parse(localStorage.getItem("scanResult"));
+                    }catch(e){console.log(e);}
+                }
+                
+            },
+            computed: {
+                user() {
+                    return window.app ? window.app.session : user;
+                },
+                download() {
+                    var me = this;
+                    me.saveAs('/admin/uti/api/ip/download',{});
+                }
+            }
+        });
+    </script>
+</html>

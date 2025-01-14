@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-model="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form action="/admin/uti/api/document" 
+            v-bind:header="(o.id?'#{bundle.Edit}':'#{bundle.Create}')+' #{bundle.Document}'">
+        <div class="v-form">
+            <label>#{bundle.Dependency}:</label>
+            <v-autocomplete readonly2="!(user.ext.perms.ADMIN_UTI||user.idDir==o.user)" 
+                            placeholder="Ingrese palabra de busqueda" 
+                            ref="dependencyAutocomplete"
+                            pagination="0"
+                            required="required"
+                            autoload="true"
+                            v-model="o.dependency" src="/admin/directory/api/dependency">
+                <template v-slot:label="{selected}">
+                    <template v-if="selected">
+                        {{selected.fullName}}
+                    </template> 
+                </template>
+                <template v-slot="{row}">
+                    {{row.fullName}}
+                </template>
+            </v-autocomplete>
+            <label>#{bundle.Year}:</label>
+            <v-number required="true" readonly="readonly" v-model="o.year"/>
+            <label>#{bundle.Type}:</label>
+            <v-select v-model="o.documentTypeId" required="required">
+                <option value="">--SELECCIONAR--</option>
+                <option v-for="(value,key) in options.type" v-bind:key="'documentTypeId-'+key" v-bind:value="value[0]">{{value[1]}}</option>
+            </v-select>
+            <template v-if="o.documentTypeId=='dabi'">
+                <label>#{bundle.Category}:</label>
+                <v-select v-model="o.categoryId">
+                    <option value="">--SELECCIONAR--</option>
+                    <v-options url="/admin/uti/api/document/category" value-field="id" display-field="name"/>
+                </v-select>
+            </template>
+            <label>#{bundle.Name}:</label>
+            <input v-model="o.name" required="true"/>
+            <label>#{bundle.Description}:</label>
+            <v-textarea v-model="o.description" />
+            
+            <div class="right" style="margin-top: 10px;">
+                <v-uploader v-on:input="upload"/>
+                <a v-if="o.id||o.ext.tempFile" style="display: block;padding: 10px 5px;color: yellow;" 
+                   target="document" v-bind:href="
+                   o.ext.tempFile?
+                       ('/fs/temp/'+o.ext.tempFile):
+                       ('/admin/uti/api/document/download/'+o.id+'.'+o.code)">Ver Archivo</a>
+            </div>
+            <v-fieldset legend="Referencias" v-bind:key="k" class="v-form">
+                <div v-if="!o.references.length" style="border: 1px solid white;padding: 10px;">
+                    No hay referencias incluidas
+                </div>
+                <template v-for="item in o.references">
+                    <div v-if="!item.canceled" class="v-item" >
+                        <input v-if="!item.document" v-model="item.fileName"/>
+                        <div v-if="item.document" style="border: 1px solid white;padding: 10px;">
+                            <template v-if="!item.document.extension">
+                                {{item.fileName}}
+                            </template>
+                            <a v-if="item.document.extension" style="display: block;color: yellow;"
+                                target="document" v-bind:href="
+                                item.tempFile?
+                                ('/fs/temp/'+item.tempFile):
+                                ('/admin/uti/api/document/download/'+item.document.id+'.'+item.document.code)
+                                ">{{item.fileName}}</a>
+                        </div>
+                        <div class="right">
+                        <i v-on:click="item.canceled=1;k++" style="margin: 10px 5px 0px;cursor: pointer;" class="fa fa-trash"></i>
+                       
+                        </div>
+                    </div>   
+                </template> 
+                <v-fieldset legend="Busqueda documento" closable="true">
+                    <label>Año:</label>
+                    <input v-model="o.search"/>
+                    <label>Tipo:</label>
+                    <input v-model="o.type"/>
+                    <v-autocomplete ref="search" style="margin-top: 10px;" v-bind:selectable="true"
+                        v-bind:pagination="20"
+                        v-bind:autoload="false"
+                        v-on:input="input"
+                        v-bind:params="{all:1}"
+                        placeholder="Nombre documento"
+                        v-bind:floating="false"
+                        src="/admin/uti/api/document" >
+                        <template v-slot:default="{row,index}">
+                            {{row.name}}
+                        </template>
+                    </v-autocomplete>
+                    <!--v-uploader value="Agregar Archivo" v-on:input="upload($event,1)"/-->
+                </v-fieldset>
+                <div class="right" style="margin-top: 10px;">
+                    <v-uploader v-on:input="upload($event,1)"/>
+                </div>
+            </v-fieldset>
+        </div>
+        <center>
+            <v-button value="#{bundle.Save}" icon="fa-save" v-on:click.prevent="save"/>
+            <v-button value="#{bundle.Cancel}" icon="fa-ban" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+        //--var axios=window.axios;
+        //--var _=window._;
+        _.ui({
+            props: ['id'],
+            data() {
+                return {
+                    k:0,
+                    options:{type:[
+                        ['dabi','DATOS ABIERTOS'],     
+                        ['memo','MEMO'], 
+                        ['memu','MEMO MULTIPLE'],
+                        ['inf','INFORME'],
+                        ['ioi','INFORME DE ORGANO INSTRUCTOR'],
+                        ['o','OFICIO'],
+                        ['omul','OFICIO MULTIPLE'],
+                        ['ar','ADENDAS REGIONALES'],
+                        ['acr','ACUERDO CONSEJO REGIONAL'],
+                        ['ca','CARTA'],
+                        ['dr','DECRETO REGIONAL'],
+                        ['cnv','CONVENIOS'],
+                        ['or','ORDENANZA REGIONAL'],
+                        ['rdr','RESOLUCIÓN DIRECTORAL REGIONAL'],
+                        ['rer','RESOLUCIÓN EJECUTIVA REGIONAL'],
+                        ['rgr','RESOLUCIÓN GERENCIAL GENERAL REGIONAL'],
+                        ['rm','RESOLUCIÓN MINISTERIAL']
+                    ]},
+                    filter: null, o: {dependency:null,documentTypeId:'o',year:new Date().getFullYear(),ext:{},references:[]}};
+            },
+            mounted() {
+                this.render();
+            },
+            methods:{
+                upload(e,r){
+                    e.fileName = e.fileName.substr(0, e.fileName.lastIndexOf('.')) || e.fileName;
+                    if(r){
+                        this.o.references.push(e);
+                    }else{
+                        if(!this.o.name)
+                        this.o.name=e.fileName;
+                        this.o.ext=e;
+                    }
+                },
+                render() {
+                    var me = this, id = me.id,user=me.user,perms=user.ext.perms;
+                    console.log(user);
+                    if (id)
+                        axios.get('/admin/uti/api/document/' + id).then((response)=>{
+                            var o=response.data;
+                            o.references.forEach((e)=>{
+                                e.fileName=e.document.name;
+                                e.documentTypeId=e.document.documentTypeId;
+                                e.year=e.document.year;
+                            });
+                            me.o = o;
+                        });
+                    else if(!perms.ADMIN_UTI_DOCUMENT){
+                        if(user.idDir)
+                            axios.get('/admin/rh/api/contract/0/0',{params:{peopleId:user.idDir,active:1}}).then((r)=>{
+                                me.o.dependency=r.data.data[0].dependency;
+                                var data=[];
+                                r.data.data.forEach((e)=>{
+                                    data.push(e.dependency);
+                                });
+                                me.$refs.dependencyAutocomplete.data0=data;
+                            });
+                        else{
+                            axios.get('/admin/uti/api/document/dependency/'+user.uid).then((r)=>{
+                                me.o.dependency=r.data[0];
+                                console.log(r.data);
+                                me.$refs.dependencyAutocomplete.data0=r.data;
+                            });
+                        }
+                    }
+                },
+                input(e){
+                    if(e)this.o.references.push({referenceId:e.id,document:{code:e.code,id:e.id},fileName:e.name});
+                }
+            }
+        });
+    </script>
+    <style>
+        input:read-only:not(:disabled), textarea:read-only:not(:disabled) {
+            border: 1px solid white !important;
+        }
+        .v-item{
+            border: 1px solid white;
+            padding: 10px;
+        }
+        .v-item:not(:first-child){
+            margin-top: 10px;
+        }
+        .v-dataview > div{
+            padding: 5px;
+            border:1px solid white;
+            cursor:pointer;
+        }
+        .v-dataview > div:hover:not(.v-more-results){
+            background-color:  dodgerblue;
+        }
+        .v-more-results{
+            background-color: black;
+        }
+    </style>
+</html>

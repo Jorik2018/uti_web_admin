@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <ui:composition>
+        <c:set value="#{equipmentController.selected}" var="o"/>
+        <p:dialog id="EquipmentCreate" header="#{(empty o.id?bundle.Create:bundle.Edit)} #{bundle.Equipment}">
+            <h:form id="EquipmentCreateForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{o != null}">
+                <p:outputLabel value="Ubicacion :" for="lugar" />
+                        <p:inputText required="true" id="lugar" value="#{o.lugar}" title="#{bundle.Lugar}" />
+                <p:outputLabel value="Numero :" for="numero" />
+                        <p:inputText required="true" id="numero" value="#{o.numero}" title="#{bundle.Numero}" />
+                <p:outputLabel value="Codigo-IP :" for="codigoIp" />
+                        <p:inputText required="true" id="codigoIp" value="#{o.codigoIp}" title="#{bundle.CodigoIp}" />
+                
+                <p:outputLabel value="Persona encargada" for="people" />
+                       <ui:include src="/widget/personaNaturalAutocomplete.xhtml">
+                            <ui:param name="REQUIRED" value="#{true}"/>
+                            <ui:param name="VALUE" value="#{o.people}"/>
+                            <ui:param name="ID" value="people"/>    
+                        </ui:include>
+                 <p:outputLabel value="Equipo" for="equipo" />
+                        <p:inputText required="true" id="equipo" value="#{o.equipo}" title="#{bundle.Equipo}" />
+                <p:outputLabel value="Caracteristicas :" for="caracteristicas" />
+                        <p:inputTextarea required="true" id="caracteristicas" value="#{o.caracteristicas}" title="#{bundle.Caracteristicas}" />
+                <p:outputLabel value="Ingrese MAC :" for="macId" />
+                        <p:inputText required="true" id="macId" value="#{o.macId}" title="#{bundle.MacId}" />
+                <p:outputLabel value="Grupo Trabajo:" for="workgroup" />
+                        <p:inputText required="true" id="workgroup" value="#{o.workgroup}" title="#{bundle.Workgroup}" />
+                <p:outputLabel value="Nombre del Equipo" for="name" />
+                        <p:inputText required="true" id="name" value="#{o.name}" title="#{bundle.Name}" />
+                <p:outputLabel value="Codigo Patrimonial" for="codPatrimonial" />
+                        <p:inputText required="true" id="codPatrimonial" value="#{o.codPatrimonial}" title="#{bundle.CodPatrimonial}" />
+                        
+                    </p:panelGrid>
+                    <center>
+                        <p:commandButton icon="ui-icon-disk" actionListener="#{equipmentController.create}" value="#{bundle.Save}" update="display,:growl" oncomplete="return _.c(this,args)"/>
+                        <p:button icon="ui-icon-cancel" value="#{bundle.Cancel}" onclick="return _.c(this)"/>
+                    </center>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

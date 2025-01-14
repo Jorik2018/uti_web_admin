@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-model="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form id="UtiAtencionCreateForm" action="/admin/uti/api/attention" 
+            
+            v-bind:header="(o.id?'#{bundle.Edit}':'#{bundle.Create}')+' #{bundle.Attention}'">
+        <div class="v-form">
+            <label v-if="user.ext.perms.ADMIN_UTI||user.uid==1||o.ext.server">#{'Atendido por'}:</label>
+            <template v-if="user.ext.perms.ADMIN_UTI||user.uid==1">
+                <v-select v-model="o.peopleId" >
+                    <option value="0">#{bundle.SelectOneMessage}</option>
+                    <v-options url="/admin/rh/api/contract/0/0" v-bind:filters="{dependencyId:25,active:1}" value-field="people.id">
+                        <template v-slot="{item}">
+                            {{item.people.fullName}}
+                        </template>
+                    </v-options> 
+                </v-select>
+            </template>
+            <template v-if="!(user.ext.perms.ADMIN_UTI||user.uid==1)&amp;&amp;o.ext.server">
+                <div>{{o.ext.server.fullName}}</div>
+            </template>
+            <label>#{bundle.Client}:</label>
+            <div v-if="o.ext.client&amp;&amp;!canAttend">
+                {{o.ext.client.people.fullName}}
+            </div>
+            <v-autocomplete v-if="canAttend||user.ext.perms.ADMIN_UTI" 
+                            placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                            ref="peopleAutocomplete"
+                            inputClass="center"
+                            v-bind:params="{active:1,dependencyId:o.dependencyId}"
+                            v-on:input="inputClient"
+                            minQueryLength="3"
+                            v-model="o.ext.client" voncomplete="peopleComplete" src="/admin/rh/api/contract">
+                <template v-slot:label="{selected}">
+                    <template v-if="selected.people">
+                        {{selected.people.code}}: {{selected.people.fullName}}
+                    </template> 
+                </template>
+                <template v-slot="{row}">
+                  
+                    <table v-if="row.people" class="transparent">
+                        <tr>
+                            <td style="width:50px;padding:0px" align="center" >
+                                <img style="width:100%;max-height: 250px"
+                                     v-bind:src="'/thumb/160/foto/'+row.people.id+'.jpg'" />
+                            </td>
+                            <td>
+                                <a v-bind:href="'/admin/directorio/'+row.people.id" onclick="return false" >
+                                    <span>{{row.people.code}}</span>: {{row.people.fullName?row.people.fullName.toUpperCase():null}}
+                                    <div v-if="row.dependency">{{row.dependency.fullName}}</div>
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </template>
+            </v-autocomplete>
+            <div style="margin-top:5px;text-align:right">
+                <v-button icon="fa-sync" v-on:click="$refs.peopleAutocomplete.search()" />
+            </div>
+            <label>#{bundle.Dependency} *:</label>
+            <v-autocomplete readonly="!(user.ext.perms.ADMIN_UTI||user.idDir==o.user)" 
+                            placeholder="Ingrese palabra de busqueda" 
+                            ref="dependencyAutocomplete"
+                            pagination="0"
+                            required="required"
+                            autoload="true"
+                            v-on:input="dependencyInput"
+                            v-model="o.ext.dependency" src="/admin/directory/api/dependency">
+                <template v-slot:label="{selected}">
+                    <template v-if="selected">
+                        {{selected.fullName}}
+                    </template> 
+                </template>
+                <template v-slot="{row}">
+                    {{row.fullName}}
+                </template>
+            </v-autocomplete>
+            
+            <label>#{bundle.Type} *:</label>
+            <v-select v-model="o.typeId" required="required" >
+                <option value="0">#{bundle.SelectOneMessage}</option>
+                <option value="1">HARDWARE</option>
+                <option value="2">SOFTWARE</option>
+                <option value="3">MIXTO</option>
+            </v-select>
+            <label>#{'Problematica'} *:</label>
+            <v-textarea maxlength="300" required="required" v-model="o.description"  />
+            
+            <template v-if="o.startDate">
+            <label>#{bundle.StartDate}:</label>
+            <div>{{o.startDate|date}}</div>
+            </template>
+            <template v-if="o.endDate||canAttend">
+                <label>#{bundle.Solution}:</label>
+                <v-textarea maxlength="355" v-model="o.solution"  />
+            </template>
+            <template v-if="o.endDate">
+                <label>#{bundle.EndDate}:</label>
+                <div>{{o.endDate|date}}</div>
+            </template>
+            <template v-if="o.satisfaction">
+                <label>#{bundle.Satisfaction}:</label>
+                <div>{{o.satisfaction}}</div>
+            </template>
+            (*) Campos requeridos
+        </div>
+        
+        <center>
+            <v-button value="#{bundle.Save}" icon="fa-save" v-on:click.prevent="save"/>
+            <v-button value="#{bundle.Cancel}" icon="fa-ban" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+    //--import 'ol/ol.css';
+    //--var axios=window.axios;
+    //--var _=window._;
+        var user=JSON.parse('#{utilController.toJson(_USER)}');
+        if(user.ext){
+            var v=user.ext.perms;
+            if(v)
+                for(var i=0;v.length>i;i++){
+                    v[v[i]]=1;
+                }
+        }
+        _.ui({
+            watch:{
+                $route(){
+                    var me=this;
+                    setTimeout(function(){me.render()},200);
+                }
+            },
+            //--extends:window._.extends,
+            props: ['id'],
+            data() {
+                return {filter:null,o: {ext:{server:null,client:null,dependency:null},dependencyId:null}}
+            },
+            computed:{
+                user(){return window.app?window.app.session:user;},
+                canAttend(){var user=this.user;return user.ext.perms.ATTEND_UTI_ATTENTION||user.uid==1},
+                
+            },
+            methods:{
+                //--close(r){if(r===true){this.$router.back();}},
+                inputClient(v){
+                    var o=this.o;
+                    o.clientId=v?v.peopleId:null;
+                    if(v){
+                        o.dependencyId=v.dependencyId;
+                        o.ext.dependency=v.dependency;
+                    }
+                },
+                dependencyInput(v){
+                    this.o.dependencyId=v?v.id:null;
+                },
+                process(o){
+                    var user=this.user;
+                    if(o.peopleId=='0')o.peopleId=null;
+                    if(!o.user)o.user=user.idDir;
+                    return o;
+                },
+                render() {
+                    var me = this, id = me.id,user=me.user,perms=user.ext.perms;
+                    if (id)
+                        axios.get('/admin/uti/api/attention/' + id).then(function (response) {
+                            me.o = response.data;
+                            if(!me.o.peopleId&amp;&amp;user.ext.perms.ATTEND_UTI_ATTENTION){
+                                me.o.ext.server=user.ext.people;
+                                me.o.peopleId=user.ext.people.id;
+                            }
+                        });
+                    else if(perms.ATTEND_UTI_ATTENTION||perms.ADMIN_UTI||user.uid==1){
+                        if(perms.ATTEND_UTI_ATTENTION){
+                            me.o.ext.server=user.ext.people;
+                            me.o.peopleId=user.ext.people.id;
+                        }
+                    }else{
+                        me.o.ext.client={people:user.ext.people};
+                        me.o.clientId=user.ext.people.id;
+                        axios.get('/admin/rh/api/contract/0/0',{params:{peopleId:me.o.clientId}}).then(function (response) {
+                            me.o.ext.dependency=response.data.data[0].dependency;
+                            me.o.dependencyId=me.o.ext.dependency.id;
+                        });
+                    }
+                    //--setTimeout(function(){ window.app.title=me.$children[0].header; }, 200);
+                }
+            },
+            mounted() {
+                this.render();
+            },
+            //--updated(){window.app.title=this.$children[0].header;},
+            
+        })
+    </script>
+</html>

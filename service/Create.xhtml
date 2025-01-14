@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <ui:composition>
+        <c:set value="#{utiServiceController.selected}" var="o"/>
+        <p:dialog id="DsIndicatorCreate" header="#{(empty o.id?bundle.Create:bundle.Edit)} #{bundle.Service}">
+            <h:form id="DsIndicatorCreateForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="1" layout="grid" rendered="#{o != null}">
+                        <p:outputLabel value="#{bundle.Name}:" for="name" />
+                        <p:inputTextarea required="true" id="name" value="#{o.name}" title="#{bundle.Name}" />
+                        <p:outputLabel value="#{bundle.Method}s:" for="description" />
+                        <p:inputTextarea rows="1" required="true" readonly="true" id="description" value="#{o.methods}" />
+                        <p:outputLabel value="#{bundle.Entity}:" for="entity" />
+                        <p:inputTextarea rows="1" required="true" readonly="true" id="entity" value="#{o.entity}" />
+                        <p:outputLabel value="#{bundle.Justify}:" for="wsJustify" />
+                        <p:inputTextarea id="wsJustify" value="#{o.wsJustify}" />
+                        <p:outputLabel value="#{bundle.Dependency}:" for="dependency" />
+                        <p:selectOneMenu id="dependency" converter="dependencyControllerConverter"  
+                                         filter="true"  filterMatchMode="contains"
+                                         value="#{o.dependency}">
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}" />
+                            <f:selectItems value="#{dependencyController.getItems(viewParam.p)}"
+                                           var="i" itemValue="#{i}" itemLabel="#{i}" />
+
+                        </p:selectOneMenu>
+                        <p:outputLabel value="#{bundle.Position}:" for="position" />
+                        <p:selectOneMenu id="position"  
+                                         filter="true"  filterMatchMode="contains"
+                                         value="#{o.position}">
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}" />
+                            <f:selectItems value="#{positionController.getItems(viewParam.p)}"
+                                           var="i" itemValue="#{i}" itemLabel="#{i.name}" />
+
+                            
+                        </p:selectOneMenu>
+                        <p:outputLabel value="#{'Nombre de la aplicación que consumirá el servicio'}:" for="appName" />
+                        <p:inputTextarea rows="2" id="appName" value="#{o.appName}" />                        
+                        <p:outputLabel value="#{'Descripción de la aplicación cliente'}:" for="appDescription" />
+                        <p:inputTextarea  id="appDescription" value="#{o.appDescription}" />
+                        <p:outputLabel value="#{'Criticidad de aplicación cliente (ALTA/MEDIA/BAJA)'}:" for="criticalityLevel" />
+                        <p:inputText id="criticalityLevel" required="true" value="#{o.criticalityLevel}" />
+                        <p:outputLabel value="#{'Justificación de la criticidad'}:" for="criticalityJustify" />
+                        <p:inputTextarea maxlength="200" id="criticalityJustify" value="#{o.criticalityJustify}" />
+                        
+                        <p:outputLabel value="#{'Funcionario principal'}:" for="officerMain" />
+                        <ui:include src="/widget/personaNaturalAutocomplete.xhtml">
+                            <ui:param value="${o.officerMain}" name="VALUE" />
+                            <ui:param value="officerMain" name="ID" />
+                        </ui:include>
+                        <div>
+                            Será el encargado de velar por el cumplimiento del acuerdo y de responder ante la SEGDI por cualquier incumplimiento a los términos y condiciones de uso establecidos – Gerente/Jefe de TI o Equivalente.
+                        </div>
+                        <p:outputLabel value="#{'Responsable de negocio'}:" for="officerBusyness" />
+                        <ui:include src="/widget/personaNaturalAutocomplete.xhtml">
+                            <ui:param value="${o.officerBusyness}" name="VALUE" />
+                            <ui:param value="officerBusyness" name="ID" />
+                        </ui:include>
+                        <div>
+                            Será el punto de contacto que podrá responder por las características funcionales de la aplicación consumidora del servicio.
+                        </div>
+                        <p:outputLabel value="#{'Responsable técnico'}:" for="officerTecnical" />
+                        <ui:include src="/widget/personaNaturalAutocomplete.xhtml">
+                            <ui:param value="${o.officerTecnical}" name="VALUE" />
+                            <ui:param value="officerTecnical" name="ID" />
+                        </ui:include>
+                        <div>
+                            Será la contraparte técnica de la SEGDI y deberá contar con las habilidades técnicas necesarias para diagnosticar y reportar incidentes relacionados al consumo del servicio.  Se debe aclarar el régimen horario de dicho contacto sabiendo si existe algún tipo de atención 24x7 – Técnico que desarrollará el webservice
+                        </div>
+                    </p:panelGrid>
+                    <center>
+                        <p:commandButton icon="ui-icon-disk" actionListener="#{utiServiceController.create}" value="#{bundle.Save}" update="display,:growl" oncomplete="return _.c(this,args)"/>
+                        <p:button icon="ui-icon-cancel" value="#{bundle.Cancel}" onclick="return _.c(this)"/>
+                    </center>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>
