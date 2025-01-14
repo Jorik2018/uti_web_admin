@@ -3,3 +3,4 @@ node_modules
 dist
 package-lock.json
 WEB-INF
+!WEB-INF/classes/gob/regionancash/uti/jpa/UtiIp.class
