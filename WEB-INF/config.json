@@ -1,0 +1,76 @@
+{
+    "url-mapping": {
+        "":{
+            "title":"UTI"
+        },
+        "presto": {
+            "title": "PRESTO",
+            "file": "presto"
+        },
+        "attention": {
+            "title": "#{bundle.Attentions}",
+            "file": "attention/List"
+        },
+        "attention/:id/edit": {
+            "title": "#{bundle.Edit} #{bundle.Attention}",
+            "file": "attention/Create",
+            "access-arguments":"UTI_ATTENTION_REGISTER"
+        },
+        "attention/create": {
+            "title": "#{bundle.Create} #{bundle.Attention}",
+            "file": "attention/Create",
+            "access-arguments":"UTI_ATTENTION_REGISTER",
+            "type":1002
+        },
+        "incident": {
+            "title": "#{bundle.Incident}s",
+            "file": "incident/List"
+        },
+        "incident/:id/edit": {
+            "title": "#{bundle.Edit} #{bundle.Incident}",
+            "file": "incident/Create",
+            "access-arguments":"UTI_INCIDENT_REGISTER"
+        },
+        "incident/create": {
+            "title": "#{bundle.Create} #{bundle.Incident}",
+            "file": "incident/Create",
+            "access-arguments":"UTI_INCIDENT_REGISTER",
+            "type":1002
+        },
+        "document": {
+            "title": "#{bundle.Document}s",
+            "file": "document/List"
+        },
+        "document/:id": {
+            "title": "#{bundle.View} #{bundle.Document}",
+            "file": "document/View",
+            "access-arguments":"UTI_DOCUMENT_REGISTER"
+        },
+        "document/:id/edit": {
+            "title": "#{bundle.Edit} #{bundle.Document}",
+            "file": "document/Create",
+            "access-arguments":"UTI_DOCUMENT_REGISTER"
+        },
+        "document/create": {
+            "title": "#{bundle.Create} #{bundle.Document}",
+            "file": "document/Create",
+            "access-arguments":"UTI_DOCUMENT_REGISTER",
+            "type":1002
+        },
+        "ip": {
+            "title": "#{bundle.IP}s",
+            "file": "ip/List"
+        },
+        "ip/:id/edit": {
+            "title": "#{bundle.Edit} #{bundle.IP}",
+            "file": "ip/Create",
+            "access-arguments":"UTI_IP_REGISTER"
+        },
+        "ip/create": {
+            "title": "#{bundle.Create} #{bundle.IP}",
+            "file": "ip/Create",
+            "access-arguments":"UTI_IP_REGISTER",
+            "type":1002
+        }
+    }
+}
