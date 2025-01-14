@@ -108,8 +108,18 @@
                 <label>Fecha:</label>
                 <v-calendar v-model="o.maintenanceDate"/>
             </v-fieldset>
+
+            <v-fieldset legend="TITULO OFICCE 2021" class="v-form">
+                <label>Licencia Serie:</label>
+                <input v-model="o.licenseSeries"/>
+                <label>Codigo de Activación:</label>
+                <input v-model="o.activationCode"/>
+                <label>Fecha:</label>
+                <input v-model="o.activationFecha"/>
+            </v-fieldset>
+
             <label>Habilitado:</label>
-                <v-switch v-model="o.active"/>
+            <v-switch v-model="o.active"/>
         </div>
 
         <center>
