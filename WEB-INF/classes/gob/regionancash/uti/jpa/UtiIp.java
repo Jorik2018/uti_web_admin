@@ -102,6 +102,7 @@ public class UtiIp
     private String deviceModel;
     @Column(name = "maintenance_type")
     private Character maintenanceType;
+    
     @Column(name = "maintenance_date")
     private Date maintenanceDate;
 

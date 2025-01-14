@@ -167,12 +167,31 @@
                     </v-filter>
                     {{row.maintenanceType}}
                 </td>
-                <td width="80" class="center" sort="updated" remote="true" header="Fecha Mantenimiento">
+                <td width="80" class="center" sort="maintenanceDate" remote="true" header="Fecha Mantenimiento">
                     <v-filter name="filter" >
                         <input disabled="true"/>
                     </v-filter>
                     {{row.maintenanceDate|date}}
                 </td>
+
+                <td width="80" class="center" sort="activationCode" remote="true" header="activationCode">
+                    <v-filter name="filter" >
+                        <input disabled="true"/>
+                    </v-filter>
+                    {{row.activationCode}}
+                </td>
+                <td width="80" class="center" sort="licenseSerie" remote="true" header="licenseSerie">
+                    <v-filter name="filter" >
+                        <input disabled="true"/>
+                    </v-filter>
+                    {{row.licenseSerie}}
+                </td>
+                <td width="80" class="center" sort="activationDate" remote="true" header="Fecha Activation">
+                    <v-filter name="filter" >
+                        <input disabled="true"/>
+                    </v-filter>
+                    {{row.activationDate|date}}
+                </td> 
                 <td width="80" class="center" header="Usuario">
                     <v-filter name="filter" >
                         <input v-model="filters.user" disabled="true"/>
